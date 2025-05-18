@@ -27,70 +27,40 @@
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const token = localStorage.getItem('token');
-        const role = localStorage.getItem('role');
-
-        if (!token || role !== 'administrador') {
-            alert("Acceso denegado. Solo administradores pueden ver esta página.");
-            window.location.href = "/login";
-            return;
-        }
-
-        fetch('/users', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        })
-        .then(res => res.json())
+document.addEventListener('DOMContentLoaded', function () {
+    fetch('/get_users', { credentials: 'same-origin' })
+        .then(response => response.json())
         .then(data => {
-            const users = data.users || data;  // compatible con backend que envíe {'users': [...]} o directamente [...]
-            const tableBody = document.getElementById('users-body');
-            users.forEach(user => {
+            const table = document.querySelector('table');
+            data.users.forEach(user => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${user.id}</td>
                     <td>${user.username}</td>
                     <td>${user.role}</td>
-                    <td><button onclick="deleteUser(${user.id})" class="btn btn-danger">Eliminar</button></td>
+                    <td>
+                        <button onclick="eliminarUsuario(${user.id})">Eliminar</button>
+                    </td>
                 `;
-                tableBody.appendChild(row);
+                table.appendChild(row);
             });
-        })
-        .catch(err => {
-            console.error(err);
-            alert('Error al cargar usuarios médicos.');
         });
-    });
 
-    function deleteUser(id) {
-        const token = localStorage.getItem('token');
-        if (!confirm('¿Estás seguro de que deseas eliminar este médico?')) return;
-
+    window.eliminarUsuario = function(id) {
         fetch(`/users/${id}`, {
             method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+            credentials: 'same-origin'
         })
-        .then(res => {
-            if (res.ok) {
-                alert("Médico eliminado correctamente.");
+        .then(response => {
+            if (response.ok) {
+                alert('Usuario eliminado');
                 location.reload();
             } else {
-                res.json().then(data => alert(data.message || 'Error al eliminar médico.'));
+                alert('Error al eliminar usuario');
             }
-        })
-        .catch(err => {
-            console.error(err);
-            alert('Error de red al eliminar médico.');
         });
-    }
-
-    function logout() {
-        localStorage.clear();
-        window.location.href = '/login';
-    }
+    };
+});
 </script>
 </body>
 </html>
