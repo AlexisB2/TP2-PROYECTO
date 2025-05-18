@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Usuarios Médicos</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Usuarios Médicos</h1>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Usuario</th>
+                    <th>Rol</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody id="users-body"></tbody>
+        </table>
+
+        <button onclick="window.location.href='/patients_page'" class="back-button">Volver</button>
+        <button onclick="logout()" class="back-button">Cerrar Sesión</button>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+
+        if (!token || role !== 'administrador') {
+            alert("Acceso denegado. Solo administradores pueden ver esta página.");
+            window.location.href = "/login";
+            return;
+        }
+
+        fetch('/users', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            const users = data.users || data;  // compatible con backend que envíe {'users': [...]} o directamente [...]
+            const tableBody = document.getElementById('users-body');
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.username}</td>
+                    <td>${user.role}</td>
+                    <td><button onclick="deleteUser(${user.id})" class="btn btn-danger">Eliminar</button></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error al cargar usuarios médicos.');
+        });
+    });
+
+    function deleteUser(id) {
+        const token = localStorage.getItem('token');
+        if (!confirm('¿Estás seguro de que deseas eliminar este médico?')) return;
+
+        fetch(`/users/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then(res => {
+            if (res.ok) {
+                alert("Médico eliminado correctamente.");
+                location.reload();
+            } else {
+                res.json().then(data => alert(data.message || 'Error al eliminar médico.'));
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error de red al eliminar médico.');
+        });
+    }
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = '/login';
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Pacientes</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Lista de Pacientes</h1>
+
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+    <a href="/add_patient_page" class="add-patient-button">Agregar Paciente</a>
+    <div>
+        {% if rol == "administrador" %}<a href="/users_page" class="add-patient-button">Eliminar Médicos</a>{% endif %}
+    </div>
+     </div>
+            <a id="/logout-button" href="/logout">Cerrar Sesión</a>
+        </div>
+</div>
+
+
+
+        <table id="patients-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Edad</th>
+                    <th>Etnia</th>
+                    <th>Días de Menstruación</th>
+                    <th>Alargue de Duración</th>
+                    <th>Dolores</th>
+                    <th>Aumento de Sangrado</th>
+                    <th>Infertilidad</th>
+                    <th>Dispareunia</th>
+                    <th>Dismenorrea</th>
+                    <th>Endometriosis</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="patients-body"></tbody>
+        </table>
+
+        <p id="no-patients" style="display:none;">No hay pacientes registrados.</p>
+    </div>
+
+    <script>
+    window.addEventListener("DOMContentLoaded", async () => {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            alert("Debe iniciar sesión.");
+            window.location.href = "/login";
+            return;
+        }
+
+        try {
+            const response = await fetch("/patients", {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                alert("Error: Token inválido o sesión expirada");
+                localStorage.removeItem("token");
+                localStorage.removeItem("role");
+                window.location.href = "/login";
+                return;
+            }
+
+            const data = await response.json();
+
+            const patientsBody = document.getElementById("patients-body");
+            const noPatientsMessage = document.getElementById("no-patients");
+
+            if (data.patients.length === 0) {
+                noPatientsMessage.style.display = "block";
+            } else {
+                noPatientsMessage.style.display = "none";
+                data.patients.slice().reverse().forEach(patient => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${patient.id}</td>
+                        <td>${patient.nombre}</td>
+                        <td>${patient.edad}</td>
+                        <td>${patient.etnia == 1 ? 'Sí' : 'No'}</td>
+                        <td>${patient.dias_menstruacion}</td>
+                        <td>${patient.alargue_duracion}</td>
+                        <td>${patient.dolores == 1 ? 'Sí' : 'No'}</td>
+                        <td>${patient.aumento_sangrado == 1 ? 'Sí' : 'No'}</td>
+                        <td>${patient.infertilidad == 1 ? 'Sí' : 'No'}</td>
+                        <td>${patient.dispareunia == 1 ? 'Sí' : 'No'}</td>
+                        <td>${patient.dismenorrea == 1 ? 'Sí' : 'No'}</td>
+                        <td>${patient.endometriosis == 1 ? 'Sí' : 'No'}</td>
+                        <td>
+                            <button onclick="editPatient(${patient.id})">Editar</button>
+                            <button onclick="deletePatient(${patient.id})">Eliminar</button>
+                        </td>
+                    `;
+                    patientsBody.appendChild(row);
+                });
+            }
+        } catch (error) {
+            console.error("Error al cargar pacientes:", error);
+            alert("Error al cargar pacientes.");
+        }
+    });
+
+    function deletePatient(id) {
+        if (confirm("¿Está seguro que desea eliminar este paciente?")) {
+            const token = localStorage.getItem("token");
+
+            fetch(`/patients/${id}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }).then(response => response.json())
+              .then(data => {
+                  alert(data.message);
+                  window.location.reload();
+              });
+        }
+    }
+
+    function editPatient(id) {
+        window.location.href = `/edit_patient_page?id=${id}`;
+    }
+
+    // Verificar si el usuario es admin y mostrar botón
+    if (localStorage.getItem("role") === "admin") {
+        document.getElementById("admin-users-button").style.display = "inline-block";
+    }
+
+    function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        window.location.href = "/login";
+    }
+
+    </script>
+</body>
+</html>

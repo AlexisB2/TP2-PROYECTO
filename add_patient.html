@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Agregar Paciente</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Registrar Paciente</h1>
+
+        <form id="patientForm">
+            <input type="text" id="nombre" placeholder="Nombre" required>
+            <input type="number" id="edad" placeholder="Edad" required>
+
+            <label for="etnia">Etnia:</label>
+            <select id="etnia" required>
+                <option value="">Seleccione</option>
+                <option value="Sí">Sí</option>
+                <option value="No">No</option>
+            </select>
+
+            <input type="number" id="dias_menstruacion" placeholder="Días de Menstruación" required>
+            <input type="number" id="alargue_duracion" placeholder="Alargue de Duración" required>
+
+            <label for="dolores">Dolores:</label>
+            <select id="dolores" required>
+                <option value="">Seleccione</option>
+                <option value="Sí">Sí</option>
+                <option value="No">No</option>
+            </select>
+
+            <label for="aumento_sangrado">Aumento de Sangrado:</label>
+            <select id="aumento_sangrado" required>
+                <option value="">Seleccione</option>
+                <option value="Sí">Sí</option>
+                <option value="No">No</option>
+            </select>
+
+            <label for="infertilidad">Infertilidad:</label>
+            <select id="infertilidad" required>
+                <option value="">Seleccione</option>
+                <option value="Sí">Sí</option>
+                <option value="No">No</option>
+            </select>
+
+            <label for="dispareunia">Dispareunia:</label>
+            <select id="dispareunia" required>
+                <option value="">Seleccione</option>
+                <option value="Sí">Sí</option>
+                <option value="No">No</option>
+            </select>
+
+            <label for="dismenorrea">Dismenorrea:</label>
+            <select id="dismenorrea" required>
+                <option value="">Seleccione</option>
+                <option value="Sí">Sí</option>
+                <option value="No">No</option>
+            </select>
+
+            <button type="submit">Registrar Paciente</button>
+        </form>
+
+        <br>
+        <a href="/patients_page" class="back-button">Volver a la lista de pacientes</a>
+
+    </div>
+
+    <script>
+    window.addEventListener("DOMContentLoaded", () => {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            alert("Debe iniciar sesión primero.");
+            window.location.href = "/login";
+            return;
+        }
+
+        document.getElementById("patientForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const paciente = {
+                nombre: document.getElementById("nombre").value,
+                edad: parseInt(document.getElementById("edad").value),
+                etnia: document.getElementById("etnia").value === "Sí" ? 1 : 0,
+                dias_menstruacion: parseInt(document.getElementById("dias_menstruacion").value),
+                alargue_duracion: parseInt(document.getElementById("alargue_duracion").value),
+                dolores: document.getElementById("dolores").value === "Sí" ? 1 : 0,
+                aumento_sangrado: document.getElementById("aumento_sangrado").value === "Sí" ? 1 : 0,
+                infertilidad: document.getElementById("infertilidad").value === "Sí" ? 1 : 0,
+                dispareunia: document.getElementById("dispareunia").value === "Sí" ? 1 : 0,
+                dismenorrea: document.getElementById("dismenorrea").value === "Sí" ? 1 : 0
+            };
+
+            try {
+                const response = await fetch("/add_patient", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify(paciente)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(data.message);
+                    window.location.href = "/patients_page";
+                } else {
+                    alert(data.message || "Error al registrar el paciente.");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Error en el servidor al registrar paciente.");
+            }
+        });
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Iniciar Sesión</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Iniciar Sesión</h1>
+
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Usuario" required>
+            <input type="password" id="password" placeholder="Contraseña" required>
+            <button type="submit">Ingresar</button>
+        </form>
+
+        <p>¿No tienes cuenta? <a href="/register_page">Regístrate aquí</a></p>
+    </div>
+
+    <script>
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        try {
+            const response = await fetch("/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // ✅ Guardar el token (username) y el rol en localStorage
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("role", data.role);
+
+                alert("Inicio de sesión exitoso");
+                window.location.href = "/patients_page";
+            } else {
+                alert(data.message || "Error al iniciar sesión.");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Error de conexión al servidor.");
+        }
+    });
+    </script>
+</body>
+</html>

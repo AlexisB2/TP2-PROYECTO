@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Paciente</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Editar Paciente</h1>
+
+        <form id="editPatientForm">
+            <input type="text" id="nombre" placeholder="Nombre" required>
+            <input type="number" id="edad" placeholder="Edad" required>
+
+            <label for="etnia">Etnia:</label>
+            <select id="etnia" required>
+                <option value="">Seleccione</option>
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+            </select>
+
+            <input type="number" id="dias_menstruacion" placeholder="Días de Menstruación" required>
+            <input type="number" id="alargue_duracion" placeholder="Alargue de Duración" required>
+
+            <label for="dolores">Dolores:</label>
+            <select id="dolores" required>
+                <option value="">Seleccione</option>
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+            </select>
+
+            <label for="aumento_sangrado">Aumento de Sangrado:</label>
+            <select id="aumento_sangrado" required>
+                <option value="">Seleccione</option>
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+            </select>
+
+            <label for="infertilidad">Infertilidad:</label>
+            <select id="infertilidad" required>
+                <option value="">Seleccione</option>
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+            </select>
+
+            <label for="dispareunia">Dispareunia:</label>
+            <select id="dispareunia" required>
+                <option value="">Seleccione</option>
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+            </select>
+
+            <label for="dismenorrea">Dismenorrea:</label>
+            <select id="dismenorrea" required>
+                <option value="">Seleccione</option>
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+            </select>
+
+            <button type="submit">Guardar Cambios</button>
+        </form>
+
+        <br>
+        <a href="/patients_page" class="back-button">Volver a la lista de pacientes</a>
+    </div>
+
+    <script>
+        const token = localStorage.getItem("token");
+        const urlParams = new URLSearchParams(window.location.search);
+        const patientId = urlParams.get("id");
+
+        if (!token || !patientId) {
+            alert("Sesión no válida o paciente no especificado");
+            window.location.href = "/login";
+        }
+
+        async function cargarDatosPaciente() {
+            try {
+                const res = await fetch(`/patients/${patientId}`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+                const paciente = await res.json();
+
+                if (!res.ok) {
+                    alert(paciente.message || "No se pudo obtener los datos.");
+                    return;
+                }
+
+                document.getElementById("nombre").value = paciente.nombre;
+                document.getElementById("edad").value = paciente.edad;
+                document.getElementById("etnia").value = paciente.etnia;
+                document.getElementById("dias_menstruacion").value = paciente.dias_menstruacion;
+                document.getElementById("alargue_duracion").value = paciente.alargue_duracion;
+                document.getElementById("dolores").value = paciente.dolores;
+                document.getElementById("aumento_sangrado").value = paciente.aumento_sangrado;
+                document.getElementById("infertilidad").value = paciente.infertilidad;
+                document.getElementById("dispareunia").value = paciente.dispareunia;
+                document.getElementById("dismenorrea").value = paciente.dismenorrea;
+
+            } catch (error) {
+                console.error(error);
+                alert("Error al cargar los datos.");
+            }
+        }
+
+        cargarDatosPaciente();
+
+        document.getElementById("editPatientForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const datos = {
+                nombre: document.getElementById("nombre").value,
+                edad: parseInt(document.getElementById("edad").value),
+                etnia: parseInt(document.getElementById("etnia").value),
+                dias_menstruacion: parseInt(document.getElementById("dias_menstruacion").value),
+                alargue_duracion: parseInt(document.getElementById("alargue_duracion").value),
+                dolores: parseInt(document.getElementById("dolores").value),
+                aumento_sangrado: parseInt(document.getElementById("aumento_sangrado").value),
+                infertilidad: parseInt(document.getElementById("infertilidad").value),
+                dispareunia: parseInt(document.getElementById("dispareunia").value),
+                dismenorrea: parseInt(document.getElementById("dismenorrea").value)
+            };
+
+            try {
+                const res = await fetch(`/patients/${patientId}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify(datos)
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert(data.message);
+                    window.location.href = "/patients_page";
+                } else {
+                    alert(data.message || "No se pudo actualizar el paciente.");
+                }
+
+            } catch (error) {
+                console.error(error);
+                alert("Error en la conexión.");
+            }
+        });
+    </script>
+</body>
+</html>
