@@ -164,14 +164,11 @@ def delete_patient(patient_id):
         return jsonify({'message': 'Error al eliminar paciente'}), 500
 
 @app.route('/users/<int:user_id>', methods=['DELETE'])
-@token_required
 def delete_user(user_id):
-    conn = get_db_connection()
-    user_data = conn.execute("SELECT role FROM users WHERE username = ?", (g.current_user,)).fetchone()
-    if not user_data or user_data['role'] != 'administrador':
-        conn.close()
+    if 'username' not in session or session.get('rol') != 'administrador':
         return jsonify({'message': 'No autorizado'}), 403
 
+    conn = get_db_connection()
     conn.execute('DELETE FROM users WHERE id = ?', (user_id,))
     conn.commit()
     conn.close()
@@ -215,19 +212,16 @@ def register_page():
 
 
 @app.route('/users_page')
-@token_required
 def users_page():
-    conn = get_db_connection()
-    user_data = conn.execute("SELECT * FROM users WHERE username = ?", (g.current_user,)).fetchone()
-    conn.close()
-    if not user_data or user_data['role'] != 'administrador':
+    if 'username' not in session or session.get('rol') != 'administrador':
         return redirect('/')
     return render_template('users.html')
 
 @app.route('/get_users', methods=['GET'])
 def get_users():
-    conn = sqlite3.connect('endometriosis_app.db')
-    conn.row_factory = sqlite3.Row
+    if 'username' not in session or session.get('rol') != 'administrador':
+        return jsonify({'message': 'No autorizado'}), 403
+    conn = get_db_connection()
     users = conn.execute("SELECT id, username, role FROM users WHERE role = 'medico'").fetchall()
     conn.close()
     return jsonify({'users': [dict(u) for u in users]})
@@ -236,7 +230,5 @@ def get_users():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
 
 
